@@ -1,23 +1,50 @@
 'use client'
 
+import FormInput from "@/components/common/form-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { INITIAL_LOGIN_FORM } from "@/constants/auth-constant";
-import { LoginForm, loginSchema } from "@/validations/auth-validation";
+import { Form } from "@/components/ui/form";
+import { INITIAL_LOGIN_FORM, INITIAL_STATE_LOGIN_FORM } from "@/constants/auth-constant";
+import { LoginForm, loginSchemaForm } from "@/validations/auth-validation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { startTransition, useActionState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { login } from "../actions";
+import { AuthFormState } from "@/types/auth";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Login() {
     const form = useForm<LoginForm>({
-        resolver: zodResolver(loginSchema),
+        resolver: zodResolver(loginSchemaForm),
         defaultValues: INITIAL_LOGIN_FORM,
     })
 
-    const onSubmit = form.handleSubmit(async (data) => console.log(data))
+    const [loginState, loginAction, isPendingLogin] = useActionState<AuthFormState, FormData | null>(login, INITIAL_STATE_LOGIN_FORM);
 
+    const onSubmit = form.handleSubmit(async (data) => {
+        const formData = new FormData()
+        Object.entries(data).forEach(([key, value]) => {
+            formData.append(key, value)
+        })
 
+        startTransition(() => {
+            loginAction(formData)
+        })
+    })
+
+    useEffect(() => {
+        if (loginState.status === 'error') {
+            toast.error('Login Failed', {
+                description: loginState.errors?._form?.[0],
+            })
+            startTransition(() => {
+                loginAction(null)
+            })
+        }
+    }, [loginState]);
+
+    console.log(loginState)
     return (
         <Card>
             <CardHeader className="text-center">
@@ -29,47 +56,21 @@ export default function Login() {
             <CardContent>
                 <Form {...form}>
                     <form className="space-y-4" onSubmit={onSubmit}>
-                        <FormField
-                            control={form.control}
+                        <FormInput
+                            form={form}
+                            type="email"
                             name="email"
-                            render={({ field: { ...rest } }) => {
-                                return (
-                                    <FormItem>
-                                        <FormLabel>Email</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                {...rest}
-                                                type="email"
-                                                placeholder="Insert your email"
-                                                autoComplete="off"
-                                            />
-                                        </FormControl>
-                                        <FormMessage className="text-xs" />
-                                    </FormItem>
-                                )
-                            }}
+                            label="Email"
+                            placeholder="Enter your email"
                         />
-                        <FormField
-                            control={form.control}
+                        <FormInput
+                            form={form}
+                            type="password"
                             name="password"
-                            render={({ field: { ...rest } }) => {
-                                return (
-                                    <FormItem>
-                                        <FormLabel>Password</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                {...rest}
-                                                type="password"
-                                                placeholder="*******"
-                                                autoComplete="off"
-                                            />
-                                        </FormControl>
-                                        <FormMessage className="text-xs" />
-                                    </FormItem>
-                                )
-                            }}
+                            label="Password"
+                            placeholder="********"
                         />
-                        <Button type="submit">Login</Button>
+                        <Button type="submit">{isPendingLogin ? <Loader2 className="animate-spin" /> : 'Login'}</Button>
                     </form>
                 </Form>
             </CardContent>
