@@ -9,3 +9,8 @@ export type AuthFormState = {
         _form?: string[];
     };
 };
+
+export type LogoutFormState = {
+    status?: string;
+    message?: string;
+};

@@ -11,3 +11,8 @@ export const INITIAL_STATE_LOGIN_FORM = {
         _form: []
     }
 }
+
+export const INITIAL_LOGOUT_FORM = {
+    status: 'idle',
+    message: ''
+}
