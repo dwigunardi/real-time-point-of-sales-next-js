@@ -4,3 +4,8 @@ export type formState = {
     },
     status?: string
 }
+
+export type ActionResult<T = unknown> =
+    | { status: "success"; data?: T }
+    | { status: "error"; message: string }
+    | { status: "loading" };

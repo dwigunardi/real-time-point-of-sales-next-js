@@ -5,17 +5,36 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupConte
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { SIDEBAR_MENU_LIST, SidebarMenuKey } from "@/constants/sidebar-constant";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { signOut } from "@/actions/auth-action";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 export default function AppSidebar() {
     const { isMobile } = useSidebar()
     const pathName = usePathname()
+    const [isPending, startTransition] = useTransition()
+    const router = useRouter()
+
     const profile = {
         name: "Dwi Gunardi Meinaki",
         role: "admin",
         avatar_url: "",
+    }
+
+    const handleLogout = () => {
+        startTransition(async () => {
+            const result = await signOut()
+            if (result.status === 'error') {
+                toast.error(result.message)
+                return
+            }
+
+            toast.success(result.message)
+            router.push('/login')
+        })
     }
 
     return (
@@ -94,9 +113,12 @@ export default function AppSidebar() {
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuGroup>
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        disabled={isPending}
+                                        onClick={() => handleLogout()}
+                                    >
                                         <LogOut className="size-4" />
-                                        Logout
+                                        {isPending ? "Logging out..." : "Logout"}
                                     </DropdownMenuItem>
                                 </DropdownMenuGroup>
                             </DropdownMenuContent>
