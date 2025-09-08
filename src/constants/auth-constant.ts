@@ -16,3 +16,10 @@ export const INITIAL_LOGOUT_FORM = {
     status: 'idle',
     message: ''
 }
+
+export const INITIAL_STATE_PROFILE = {
+    id: '',
+    name: '',
+    role: '',
+    avatar_url: '',
+}

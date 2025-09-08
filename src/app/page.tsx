@@ -1,11 +1,24 @@
-import { DarkModeToggle } from "@/components/common/darkmode-toggle";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supabase/client";
-import Image from "next/image";
+import { Roles } from "@/constants/role-constant";
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser()
+  if (error || !data?.user) {
+    return redirect('/login')
+  }
+
+  const cookieStore = await cookies();
+  const profile = JSON.parse(cookieStore.get('user_profile')?.value || '{}');
+
+  if (profile.role.toUpperCase() == Roles.ADMIN) {
+    return redirect('/admin')
+  }
+
   return (
     <div className="bg-muted flex justify-center items-center h-screen flex-col space-y-4">
       <h1 className="text-4xl font-semibold">Welcome Dwi Gunardi Meinaki</h1>

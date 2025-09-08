@@ -16,7 +16,7 @@ const eslintConfig = [
 eslintConfig.push({
   rules: {
     "react-hooks/exhaustive-deps": "off",
-    "react/jsx-key": "on",
+    "react/jsx-key": "error",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-unused-vars": "off",
   },
