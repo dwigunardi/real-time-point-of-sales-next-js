@@ -47,7 +47,7 @@ export default function AppSidebar() {
         return Array.from({ length: count }).map((_, index) => (
             <SidebarMenuItem key={index}>
                 <SidebarMenuButton asChild>
-                    <div className="px-4 py-6 w-full rounded-md bg-muted animate-pulse" />
+                    <div className="px-4 py-6 w-full rounded-md bg-gray-300 dark:bg-muted animate-pulse" />
                 </SidebarMenuButton>
             </SidebarMenuItem>
         ))

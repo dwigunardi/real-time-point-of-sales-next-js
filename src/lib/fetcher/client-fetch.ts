@@ -1,8 +1,71 @@
-// lib/fetcher/clientFetch.ts
 export async function clientFetchJSON<T>(path: string, search?: Record<string, string>) {
     const qs = search ? `?${new URLSearchParams(search).toString()}` : ''
-    const res = await fetch(`${path}${qs}`, { credentials: 'include' })
-    const body = await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(body?.error || `Client fetch failed: ${res.status}`)
-    return body as T
+    const fullUrl = `${path}${qs}`
+
+    try {
+        const res = await fetch(fullUrl, { credentials: 'include' })
+        // Get raw response text first untuk debugging
+        const rawText = await res.text()
+        console.log(`Raw response: ${rawText.substring(0, 200)}...`) // Log first 200 chars
+
+        // Parse JSON dari raw text
+        let body: any
+        try {
+            body = rawText ? JSON.parse(rawText) : null
+        } catch (parseError) {
+
+            const error = new Error(`Invalid JSON response from server`)
+            error.name = 'JSONParseError'
+            // @ts-ignore
+            error.rawResponse = rawText
+            // @ts-ignore  
+            error.parseError = parseError
+            throw error
+        }
+
+        if (!res.ok) {
+            // Extract error message dengan fallback yang aman
+            let errorMessage = `HTTP ${res.status}: ${res.statusText}`
+
+            if (body) {
+                if (typeof body === 'string') {
+                    errorMessage = body
+                } else if (typeof body === 'object') {
+                    if (body.error) {
+                        errorMessage = String(body.error)
+                    } else if (body.message) {
+                        errorMessage = String(body.message)
+                    }
+                }
+            }
+
+            const error = new Error(errorMessage)
+            error.name = 'HTTPError'
+            // @ts-ignore - Add custom properties
+            error.status = res.status
+            error.cause = {
+                statusText: res.statusText,
+                responseBody: body,
+                error_url: fullUrl,
+            }
+            error.stack = error.stack
+            throw error
+        }
+
+        return body as T
+    } catch (error) {
+        // Log error untuk debugging
+        console.error('clientFetchJSON error:', error)
+
+        if (error instanceof Error) {
+            throw error
+        }
+
+        // Fallback error
+        const networkError = new Error(`Network error: ${String(error)}`)
+        networkError.name = 'NetworkError'
+        // @ts-ignore
+        networkError.originalError = error
+        throw networkError
+    }
 }

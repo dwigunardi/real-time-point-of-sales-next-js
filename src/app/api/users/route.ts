@@ -1,24 +1,69 @@
-import { createClient } from "@/lib/supabase/server"
-import { NextResponse } from "next/server"
+import { withApiHandler } from '@/lib/api/handler'
+import { createClient } from '@/lib/supabase/server'
+import { paginatedResponse, errorResponse } from '@/lib/api/response'
+import { extractSupabaseError } from '@/lib/api/errors'
 
-export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url)
-    const q = searchParams.get('q') ?? ''
-    const limit = Math.max(1, Math.min(100, Number(searchParams.get('limit') ?? '10')))
-    const page = Math.max(1, Number(searchParams.get('page') ?? '1'))
-    const from = (page - 1) * limit
-    const to = from + limit - 1
+async function getUsers({ pagination, searchParams }: any) {
+    try {
+        const supabase = await createClient()
+        const { page, limit, offset } = pagination
+        const { q } = searchParams
 
-    const supabase = await createClient()
-    let query = supabase.from('profiles').select('*', { count: 'exact' }).limit(limit).order('created_at')
+        // Step 1: Get total count untuk avoid 416 error
+        let countQuery = supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
 
-    if (q) query = query.ilike('name', `%${q}%`)
+        if (q?.trim()) {
+            countQuery = countQuery.ilike('name', `%${q}%`)
+        }
 
-    const { data, count, error } = await query.range(from, to)
+        const { count, error: countError } = await countQuery
 
-    if (error) {
-        return new Response(error.message, { status: 500 })
+        if (countError) {
+            console.error('Count query error:', countError)
+            const safeError = extractSupabaseError(countError)
+            return errorResponse(safeError)
+        }
+
+        const totalPages = Math.ceil((count || 0) / limit)
+
+        // Step 2: Handle out of range gracefully
+        if (page > totalPages && (count || 0) > 0) {
+            return paginatedResponse([], count || 0, page, limit, !!q?.trim())
+        }
+
+        // Step 3: Get actual data jika page valid
+        let dataQuery = supabase
+            .from('profiles')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1)
+
+        if (q?.trim()) {
+            dataQuery = dataQuery.ilike('name', `%${q}%`)
+        }
+
+        const { data, error: dataError } = await dataQuery
+
+        if (dataError) {
+            console.error('Data query error:', dataError)
+            const safeError = extractSupabaseError(dataError)
+            return errorResponse(safeError)
+        }
+
+        return paginatedResponse(data || [], count || 0, page, limit, !!q?.trim())
+
+    } catch (error) {
+        throw error // Will be handled by withApiHandler
     }
-
-    return NextResponse.json({ data, count, page, limit })
 }
+
+// Export handlers
+export const GET = withApiHandler({
+    GET: getUsers
+}, {
+    allowedMethods: ['GET'],
+    requireAuth: true, // Set true jika perlu auth
+    validatePagination: true
+})

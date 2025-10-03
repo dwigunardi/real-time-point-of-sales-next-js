@@ -1,15 +1,29 @@
 import { ReactNode } from "react";
 import { Card } from "../ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import PaginationDataTable from "./pagination-datatable";
+import { Label } from "../ui/label";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select";
+import { LIMIT_LIST } from "@/constants/data-table-constant";
 
 export default function DataTable({
     header,
     dataSource,
-    isLoading
+    isLoading,
+    totalPages,
+    currentPage,
+    currentLimit,
+    onPageChange,
+    onLimitChange,
 }: {
-    header: string[],
-    dataSource: (string | ReactNode)[][],
+    header: string[]
+    dataSource: (string | ReactNode)[][]
     isLoading?: boolean
+    totalPages: number
+    currentPage: number
+    currentLimit: number
+    onPageChange: (page: number) => void
+    onLimitChange: (limit: number) => void
 }) {
     return (
         <div className="w-full flex flex-col gap-4">
@@ -54,7 +68,7 @@ export default function DataTable({
                                 <TableCell colSpan={header.length} className="h-24 text-center">
                                     <div className="flex flex-col gap-3">
                                         {Array.from({ length: 5 }).map((_, i) => (
-                                            <div key={i} className="w-full h-8 bg-muted animate-pulse rounded-lg" />
+                                            <div key={i} className="w-full h-8 bg-gray-300 dark:bg-muted animate-pulse rounded-lg" />
                                         ))}
                                     </div>
                                 </TableCell>
@@ -63,6 +77,40 @@ export default function DataTable({
                     </TableBody>
                 </Table>
             </Card>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Label>Limit</Label>
+                    <Select value={currentLimit.toString()} defaultValue={currentLimit.toString()} onValueChange={(value) => onLimitChange(Number(value))}>
+                        <SelectTrigger>
+                            <SelectValue placeholder={'Select Limit'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectLabel>Limit</SelectLabel>
+                                {LIMIT_LIST.map((limit) => (
+                                    <SelectItem
+                                        key={limit}
+                                        value={limit.toString()}
+                                    >
+                                        {limit}
+                                    </SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
+                {
+                    totalPages > 1 && (
+                        <div className="flex justify-end">
+                            <PaginationDataTable
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onChangePage={onPageChange}
+                            />
+                        </div>
+                    )
+                }
+            </div>
         </div>
     )
 }

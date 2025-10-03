@@ -13,7 +13,36 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function DarkModeToggle() {
-    const { setTheme } = useTheme()
+    const { setTheme, theme } = useTheme()
+    const [mounted, setMounted] = React.useState(false)
+
+    React.useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted) {
+        return null
+    }
+
+    const dataTheme = [
+        {
+            name: "light",
+            value: "light",
+        }
+        ,
+        {
+            name: "dark",
+            value: "dark",
+        },
+        {
+            name: "system",
+            value: "system",
+        }
+    ]
+
+    const renderSelectedTheme = (value: string) => {
+        return theme == value ? "bg-cyan-600 focus:text-white text-slate-100 focus:bg-cyan-600" : "dark:focus:bg-slate-800 focus:bg-slate-200 dark:hover:!text-white hover:!text-black dark:focus:text-slate-100 dark:hover:bg-slate-800"
+    }
 
     return (
         <DropdownMenu>
@@ -25,15 +54,15 @@ export function DarkModeToggle() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setTheme("light")}>
-                    Light
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>
-                    Dark
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")}>
-                    System
-                </DropdownMenuItem>
+                {dataTheme.map((item) => (
+                    <DropdownMenuItem
+                        key={item.value}
+                        onClick={() => setTheme(item.value)}
+                        className={`cursor-pointer ${renderSelectedTheme(item.value)}`}
+                    >
+                        {item.name}
+                    </DropdownMenuItem>
+                ))}
             </DropdownMenuContent>
         </DropdownMenu>
     )
