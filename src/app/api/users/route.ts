@@ -2,6 +2,7 @@ import { withApiHandler } from '@/lib/api/handler'
 import { createClient } from '@/lib/supabase/server'
 import { paginatedResponse, errorResponse } from '@/lib/api/response'
 import { extractSupabaseError } from '@/lib/api/errors'
+import { PostgrestError } from '@supabase/supabase-js'
 
 async function getUsers({ pagination, searchParams }: any) {
     try {
@@ -55,7 +56,8 @@ async function getUsers({ pagination, searchParams }: any) {
         return paginatedResponse(data || [], count || 0, page, limit, !!q?.trim())
 
     } catch (error) {
-        throw error // Will be handled by withApiHandler
+        const safeError = extractSupabaseError(error as PostgrestError);
+        return errorResponse(safeError);
     }
 }
 

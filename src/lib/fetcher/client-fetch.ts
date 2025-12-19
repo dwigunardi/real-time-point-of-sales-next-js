@@ -14,11 +14,9 @@ export async function clientFetchJSON<T>(path: string, search?: Record<string, s
             body = rawText ? JSON.parse(rawText) : null
         } catch (parseError) {
 
-            const error = new Error(`Invalid JSON response from server`)
+            const error = new Error(`Invalid JSON response from server`) as Error & { rawResponse?: string; parseError?: unknown }
             error.name = 'JSONParseError'
-            // @ts-ignore
-            error.rawResponse = rawText
-            // @ts-ignore  
+            error.rawResponse = rawText  
             error.parseError = parseError
             throw error
         }
@@ -39,9 +37,8 @@ export async function clientFetchJSON<T>(path: string, search?: Record<string, s
                 }
             }
 
-            const error = new Error(errorMessage)
-            error.name = 'HTTPError'
-            // @ts-ignore - Add custom properties
+            const error = new Error(errorMessage) as Error & { status?: number; cause?: unknown }
+            error.name = 'HTTPError in clientFetchJSON'
             error.status = res.status
             error.cause = {
                 statusText: res.statusText,
@@ -62,9 +59,8 @@ export async function clientFetchJSON<T>(path: string, search?: Record<string, s
         }
 
         // Fallback error
-        const networkError = new Error(`Network error: ${String(error)}`)
+        const networkError: Error & { name: string; originalError?: unknown } = new Error(`Network error: ${String(error)}`)
         networkError.name = 'NetworkError'
-        // @ts-ignore
         networkError.originalError = error
         throw networkError
     }

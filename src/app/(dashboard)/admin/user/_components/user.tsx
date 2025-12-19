@@ -14,6 +14,7 @@ import useDatatable from '@/hooks/use-data-table'
 import API_URL from '@/constants/url-constant'
 import { clientFetchPaginated } from '@/lib/fetcher/paginated-fetch'
 import { useApiFlags } from '@/hooks/use-api-flags'
+import DialogCreateUser from './dialog-create-user'
 
 export default function UserManagement() {
     const {
@@ -30,7 +31,7 @@ export default function UserManagement() {
     const q = useDeferredValue(qRaw)
     const queryKey = useMemo(() => buildUsersKey({ q: qRaw, page, limit }), [q, page, limit])
 
-    const { data: response, isLoading, error } = useQuery({
+    const { data: response, isLoading, error, refetch } = useQuery({
         queryKey: queryKey,
         queryFn: () =>
             clientFetchPaginated<User>(API_URL.getUsers, {
@@ -55,12 +56,6 @@ export default function UserManagement() {
             onClearSearch: () => handleSearch(DEFAULT_SEARCH),
         }
     )
-    console.log(hasError, response)
-    if (hasError) {
-        buildUsersKey({ q: qRaw, page, limit })
-        showRetryToast()
-        return null
-    }
 
     const totalPages = useMemo(() => {
         return response?.totalPages ? Math.ceil(response.totalPages / limit) : 0
@@ -100,6 +95,12 @@ export default function UserManagement() {
         )
     }, [response?.data])
 
+    if (hasError) {
+        buildUsersKey({ q: qRaw, page, limit })
+        showRetryToast()
+        return null
+    }
+
     return (
         <div className="w-full">
             <div className="flex flex-col lg:flex-row mb-4 gap-2 justify-between w-full">
@@ -117,6 +118,7 @@ export default function UserManagement() {
                         <DialogTrigger asChild>
                             <Button variant="outline">Create</Button>
                         </DialogTrigger>
+                        <DialogCreateUser refetch={refetch} />
                     </Dialog>
                 </div>
             </div>

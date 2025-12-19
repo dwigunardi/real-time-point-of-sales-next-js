@@ -8,6 +8,7 @@ import {
 } from '../ui/form';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 export default function FormInput<T extends FieldValues>({
     form,
@@ -15,12 +16,14 @@ export default function FormInput<T extends FieldValues>({
     label,
     placeholder,
     type = 'text',
+    selectValue,
 }: {
     form: UseFormReturn<T>;
     name: Path<T>;
     label: string;
     placeholder?: string;
     type?: string;
+    selectValue?: string[];
 }) {
     return (
         <FormField
@@ -37,6 +40,19 @@ export default function FormInput<T extends FieldValues>({
                                 autoComplete="off"
                                 className="resize-none"
                             />
+                        ) : type === 'select' ? (
+                            <Select onValueChange={rest.onChange} defaultValue={rest.value}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder={placeholder} />
+                                </SelectTrigger>
+                                <SelectContent className='hover:scrollbar-thumb-primary/80 scrollbar-track-transparent scrollbar-thin scrollbar-thumb-rounded-md'>
+                                    {selectValue?.map((option: string, index: number) => (
+                                        <SelectItem key={index} value={option} className='hover:!bg-cyan-600'>
+                                            {option}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         ) : (
                             <Input
                                 {...rest}

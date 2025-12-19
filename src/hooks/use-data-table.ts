@@ -48,7 +48,7 @@ export default function useDatatable() {
             setSearch(searchValue ?? '')
             setCurrentPage(DEFAULT_PAGE)
             replaceParams({ q: searchValue, page: DEFAULT_PAGE })
-        }, 500)
+        }, 200)
     }
 
     return {

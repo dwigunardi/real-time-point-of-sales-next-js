@@ -27,17 +27,16 @@ export function validatePagination(request: NextRequest): PaginationParams {
     return { page, limit, offset }
 }
 
-export function extractSearchParams(request: NextRequest): SearchParams {
-    const { searchParams } = new URL(request.url)
-    const params: SearchParams = {}
+export function extractSearchParams(request: NextRequest): Record<string, string | string[]> {
+  const url = new URL(request.url);
+  const params = new URLSearchParams(url.search);
+  const result: Record<string, string | string[]> = {};
 
-    searchParams.forEach((value, key) => {
-        if (key !== 'page' && key !== 'limit') {
-            params[key] = value || undefined
-        }
-    })
-
-    return params
+  for (const key of params.keys()) {
+    const values = params.getAll(key);
+    result[key] = values.length > 1 ? values : values[0];
+  }
+  return result;
 }
 
 export function validateRequiredFields(

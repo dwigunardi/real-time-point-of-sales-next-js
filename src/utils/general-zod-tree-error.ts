@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AuthFormState } from "@/types/auth";
+import { UserFormState } from "@/types/user";
 
 // Recursive function: walk through the tree from treeifyError
 function flattenTreeErrors(
@@ -66,4 +67,11 @@ export function parsedErrorAuthFormState<T extends z.ZodTypeAny>(
 ): AuthFormState["errors"] {
     const tree = z.treeifyError(error);
     return flattenTreeErrors(tree) as AuthFormState["errors"];
+}
+
+export function parsedErrorUserFormState<T extends z.ZodTypeAny>(
+    error: z.ZodError<z.infer<T>>
+): UserFormState["errors"] {
+    const tree = z.treeifyError(error);
+    return flattenTreeErrors(tree) as UserFormState["errors"];
 }

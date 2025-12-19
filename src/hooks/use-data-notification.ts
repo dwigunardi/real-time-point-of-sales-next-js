@@ -5,7 +5,7 @@ type Props = {
     isSuccess: boolean
     response: any
     q: string
-    replaceParams: Function
+    replaceParams: (params: { [key: string]: string | number | null }) => void
 }
 const useDataNotifications = ({ isSuccess, response, q, replaceParams }: Props) => {
     useEffect(() => {
